@@ -119,7 +119,28 @@
   @keyframes gira{to{transform:rotate(360deg)}}
   .loading{display:flex;align-items:center;gap:10px;color:var(--txt2);padding:18px;justify-content:center}
   .novo{background:var(--neon-vermelho);color:#fff;font-size:10px;font-weight:800;padding:1px 7px;border-radius:999px;margin-left:6px;box-shadow:0 0 8px var(--neon-vermelho)}
-  @media(max-width:620px){.kpis{grid-template-columns:1fr 1fr}.grid-perfis{grid-template-columns:1fr}.topbar img{height:34px}}
+  /* Agenda estilo Cucco: calendario + coluna lateral */
+  .agenda-cucco{display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap}
+  .ac-cal{flex:1;min-width:290px}
+  .ac-lista{flex:1.1;min-width:290px}
+  .ac-servico{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--marca);background:var(--bg2);border:1px solid var(--linha);border-radius:10px;padding:9px 12px;margin-bottom:12px}
+  .ac-dia-titulo{font-size:14px;font-weight:800;color:var(--txt);margin-bottom:10px;text-transform:capitalize}
+  .ac-rows{display:flex;flex-direction:column;gap:8px;max-height:470px;overflow-y:auto;padding-right:4px}
+  .ac-row{display:flex;align-items:center;gap:10px;background:var(--card2);border:1px solid var(--linha);border-radius:10px;padding:10px 12px}
+  .ac-row.MARCADO{border-left:3px solid var(--neon-laranja)}
+  .ac-row.COMPARECEU{border-left:3px solid var(--neon-verde)}
+  .ac-row.FALTOU{border-left:3px solid var(--neon-vermelho)}
+  .ac-hora{font-weight:800;font-size:15px;min-width:50px;color:var(--txt)}
+  .ac-info{flex:1;min-width:0}
+  .ac-info b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .ac-serv{font-size:11px;color:var(--txt3);margin-top:2px}
+  .ac-acoes{display:flex;gap:4px;white-space:nowrap}
+  .cal .day.clik{cursor:pointer}
+  .cal .day.clik:hover{border-color:var(--marca)}
+  .cal .day.temag{color:#2a1800;font-weight:800;background:var(--neon-laranja);border:1px solid #e0871f;box-shadow:0 0 6px rgba(255,159,46,.5)}
+  .cal .day.temag:hover{transform:scale(1.05)}
+  .cal .day .badge{position:absolute;top:2px;right:3px;background:var(--neon-azul);color:#06210f;font-size:9px;font-weight:800;min-width:15px;height:15px;line-height:15px;text-align:center;border-radius:999px;padding:0 3px}
+  @media(max-width:620px){.kpis{grid-template-columns:1fr 1fr}.grid-perfis{grid-template-columns:1fr}.topbar img{height:34px}.agenda-cucco{flex-direction:column}.ac-rows{max-height:none}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 </head>
@@ -419,10 +440,12 @@ function mtab(t){
 }
 /* -- Master: agendamentos (tempo real) -- */
 function masterAgendamentos(){
-  $('m-ag').innerHTML='<div class="card"><div class="row"><div><label>Empresa</label><select id="mag-emp" onchange="carregarMasterAg()"><option value="">Todas</option></select></div><div><label>De</label><input type="date" id="mag-de" onchange="carregarMasterAg()"></div><div><label>Até</label><input type="date" id="mag-ate" onchange="carregarMasterAg()"></div></div><div id="mag-lista" style="margin-top:14px"><div class="loading"><span class="spin"></span> Carregando...</div></div></div>';
+  $('m-ag').innerHTML='<div class="loading"><span class="spin"></span> Carregando...</div>';
   gcall('masterResumo',ESTADO.token).then(function(r){
-    var sel=$('mag-emp'); r.empresas.forEach(function(e){var o=document.createElement('option');o.value=e.id;o.textContent=e.nome;sel.appendChild(o);});
-    carregarMasterAg(); iniciarPoll(carregarMasterAg,12000);
+    var ops=r.empresas.map(function(e){return '<option value="'+e.id+'">'+esc(e.nome)+'</option>';}).join('');
+    var filtros='<div class="row" style="margin:0 0 14px"><div><label>Empresa</label><select id="acf-emp" onchange="acCarregar()"><option value="">Todas as empresas</option>'+ops+'</select></div></div>';
+    acInit({alvo:'m-ag',comEmpresa:true,comAcoes:true,fonte:'listar',filtros:filtros});
+    iniciarPoll(acCarregar,12000);
   }).catch(falhaCarregar('m-ag'));
 }
 function carregarMasterAg(){
@@ -446,7 +469,80 @@ function botoesPresenca(a){
     +'<button class="btn sm danger" style="padding:4px 8px" title="Faltou" onclick="presenca(\''+a.id+'\',\'FALTOU\')">✕</button> '
     +'<button class="btn sm ghost" style="padding:4px 8px" title="Voltar p/ Marcado" onclick="presenca(\''+a.id+'\',\'MARCADO\')">↺</button>';
 }
-function presenca(id,st){ gcall('setPresenca',ESTADO.token,id,st).then(function(){toast('Presença atualizada.','ok');if(ESTADO.role==='master')carregarMasterAg();else if(ESTADO.role==='gestor')carregarGestorAg();else carregarTerapeuta();}).catch(function(e){toast(erroMsg(e),'err');}); }
+function presenca(id,st){ gcall('setPresenca',ESTADO.token,id,st).then(function(){toast('Presença atualizada.','ok'); if(ESTADO.ac){acCarregar();} else if(ESTADO.role==='master')carregarMasterAg();else if(ESTADO.role==='gestor')carregarGestorAg();else carregarTerapeuta();}).catch(function(e){toast(erroMsg(e),'err');}); }
+
+/* ===================================================================
+   AGENDA ESTILO CUCCO — calendário + coluna lateral (horários + nomes)
+   Master, Gestora e Terapeuta. Dados 100% do backend já existente.
+=================================================================== */
+function acInit(o){
+  ESTADO.ac=o;
+  var hoje=new Date();
+  ESTADO.acMes=ESTADO.acMes||{ano:hoje.getFullYear(),mes:hoje.getMonth()+1};
+  if(!ESTADO.acDiaSel)ESTADO.acDiaSel=hoje.getFullYear()+'-'+p2(hoje.getMonth()+1)+'-'+p2(hoje.getDate());
+  $(o.alvo).innerHTML='<div class="card">'+(o.filtros||'')
+    +'<div class="agenda-cucco">'
+      +'<div class="ac-cal">'
+        +'<div class="ac-servico">💆 Serviço: <b style="color:var(--txt)">Quick Massage</b> · 20 min</div>'
+        +'<div id="ac-cal-area"></div>'
+        +'<div class="legenda"><span><span class="dot l"></span>Com agendamentos</span><span><span class="dot a"></span>Hoje</span></div>'
+      +'</div>'
+      +'<div class="ac-lista"><div id="ac-lista-area"></div></div>'
+    +'</div></div>';
+  ESTADO.acRoot=$(o.alvo);
+  acCarregar();
+}
+function acCarregar(){
+  var o=ESTADO.ac; if(!o)return; var m=ESTADO.acMes;
+  var ini=m.ano+'-'+p2(m.mes)+'-01';
+  var fim=m.ano+'-'+p2(m.mes)+'-'+p2(new Date(m.ano,m.mes,0).getDate());
+  var prom;
+  if(o.fonte==='terapeuta'){ prom=gcall('terapeutaAgenda',ESTADO.token).then(function(r){return r.agendamentos||[];}); }
+  else { var f={de:ini,ate:fim}; if(o.comEmpresa){var s=ESTADO.acRoot&&ESTADO.acRoot.querySelector('#acf-emp');f.empresaId=s?s.value:'';} prom=gcall('listarAgendamentos',ESTADO.token,f); }
+  prom.then(function(l){
+    var mapa={}; (l||[]).forEach(function(a){(mapa[a.data]=mapa[a.data]||[]).push(a);});
+    ESTADO.acMapa=mapa; acCalendario(); acLista();
+  }).catch(function(e){ if(erroMsg(e)!=='__NO_GAS__')toast(erroMsg(e),'err'); });
+}
+function acCalendario(){
+  var m=ESTADO.acMes, mapa=ESTADO.acMapa||{};
+  var hoje=new Date(), hojeISO=hoje.getFullYear()+'-'+p2(hoje.getMonth()+1)+'-'+p2(hoje.getDate());
+  var html='<div class="cal-head"><button class="btn ghost sm" onclick="acMudarMes(-1)">‹</button><b>'+nomeMes(m.mes)+' '+m.ano+'</b><button class="btn ghost sm" onclick="acMudarMes(1)">›</button></div><div class="cal">';
+  NOMES_DIAS.forEach(function(n){html+='<div class="dow">'+n+'</div>';});
+  var primeiro=new Date(Date.UTC(m.ano,m.mes-1,1)).getUTCDay();
+  var dias=new Date(Date.UTC(m.ano,m.mes,0)).getUTCDate();
+  for(var i=0;i<primeiro;i++)html+='<div class="day empty"></div>';
+  for(var dd=1;dd<=dias;dd++){
+    var ds=m.ano+'-'+p2(m.mes)+'-'+p2(dd);
+    var n=(mapa[ds]||[]).length, cls='day clik';
+    if(n>0)cls+=' temag';
+    if(ds===hojeISO)cls+=' hoje';
+    if(ESTADO.acDiaSel===ds)cls+=' sel';
+    html+='<div class="'+cls+'" onclick="acSelDia(\''+ds+'\')">'+dd+(n>0?'<span class="badge">'+n+'</span>':'')+'</div>';
+  }
+  html+='</div>';
+  ESTADO.acRoot.querySelector('#ac-cal-area').innerHTML=html;
+}
+function acSelDia(ds){ ESTADO.acDiaSel=ds; acCalendario(); acLista(); }
+function acMudarMes(delta){ var m=ESTADO.acMes.mes+delta,a=ESTADO.acMes.ano; if(m<1){m=12;a--;} if(m>12){m=1;a++;} ESTADO.acMes={ano:a,mes:m}; acCarregar(); }
+function acLista(){
+  var o=ESTADO.ac, ds=ESTADO.acDiaSel, itens=((ESTADO.acMapa||{})[ds]||[]).slice().sort(function(a,b){return a.hora<b.hora?-1:1;});
+  var html='<div class="ac-dia-titulo">'+fmtDataLonga(ds)+'</div>';
+  if(!itens.length){ html+='<p class="muted center" style="padding:28px 10px">Nenhum agendamento neste dia.</p>'; ESTADO.acRoot.querySelector('#ac-lista-area').innerHTML=html; return; }
+  html+='<div class="ac-rows">';
+  itens.forEach(function(a){
+    var sub='Quick Massage';
+    if(a.terapeuta)sub+=' · c/ '+esc(a.terapeuta);
+    if(o.comEmpresa&&a.empresa)sub+=' · '+esc(a.empresa);
+    html+='<div class="ac-row '+a.status+'"><div class="ac-hora">'+a.hora+'</div>'
+      +'<div class="ac-info"><b>'+esc(a.nome)+'</b><div class="ac-serv">'+sub+'</div></div>'
+      +'<span class="st '+a.status+'">'+rotuloStatus(a.status)+'</span>'
+      +(o.comAcoes?'<div class="ac-acoes">'+botoesPresenca(a)+'</div>':'')
+      +'</div>';
+  });
+  html+='</div><p class="muted" style="margin-top:10px">'+itens.length+' agendamento(s) · atualiza sozinho a cada 12s</p>';
+  ESTADO.acRoot.querySelector('#ac-lista-area').innerHTML=html;
+}
 
 /* -- Master: empresas -- */
 function masterEmpresas(){
@@ -634,10 +730,11 @@ function gtab(t){
   if(t==='link')gestorLink();
 }
 function gestorAgendamentos(){
-  $('g-ag').innerHTML='<div class="card"><div id="g-kpis"></div><div class="row"><div><label>De</label><input type="date" id="gag-de" onchange="carregarGestorAg()"></div><div><label>Até</label><input type="date" id="gag-ate" onchange="carregarGestorAg()"></div></div><div id="gag-lista" style="margin-top:14px"><div class="loading"><span class="spin"></span> Carregando...</div></div></div>';
+  $('g-ag').innerHTML='<div id="g-kpis"></div><div id="g-ag-cucco"></div>';
   gcall('gestorResumo',ESTADO.token).then(function(r){
     $('g-kpis').innerHTML='<div class="kpis"><div class="kpi"><div class="n">'+r.totais.agendamentos+'</div><div class="l">Agendamentos</div></div><div class="kpi"><div class="n" style="color:var(--neon-azul)">'+r.totais.hoje+'</div><div class="l">Hoje</div></div><div class="kpi"><div class="n">'+r.totais.colaboradores+'</div><div class="l">Colaboradores</div></div><div class="kpi"><div class="n" style="color:var(--marca)">'+r.empresa.limiteSemana+'</div><div class="l">Limite/semana</div></div></div>';
-    carregarGestorAg(); iniciarPoll(carregarGestorAg,12000);
+    acInit({alvo:'g-ag-cucco',comEmpresa:false,comAcoes:true,fonte:'listar'});
+    iniciarPoll(acCarregar,12000);
   }).catch(falhaCarregar('g-ag'));
 }
 function carregarGestorAg(){
@@ -657,28 +754,8 @@ function fazerLoginTerapeuta(){
   gcall('loginTerapeuta',e,s).then(function(r){ESTADO.token=r.token;ESTADO.role='terapeuta';ESTADO.terNome=r.nome;setCtx('<b>'+esc(r.nome)+'</b><br><span class="pill">🧘 Terapeuta</span>');$('t-titulo').textContent='Olá, '+r.nome.split(' ')[0];show('tela-terapeuta');carregarTerapeuta();iniciarPoll(carregarTerapeuta,12000);}).catch(function(e){toast(erroMsg(e),'err');});
 }
 function carregarTerapeuta(){
-  $('t-corpo').innerHTML=$('t-corpo').innerHTML||'<div class="loading"><span class="spin"></span> Carregando...</div>';
-  gcall('terapeutaAgenda',ESTADO.token).then(function(r){
-    var vistosKey='ter_vistos_'+r.nome; var vistos=lsGet(vistosKey)||[];
-    var novos=r.agendamentos.filter(function(a){return vistos.indexOf(a.id)<0;});
-    // agrupar por data
-    var porData={}; r.agendamentos.forEach(function(a){(porData[a.data]=porData[a.data]||[]).push(a);});
-    var datas=Object.keys(porData).sort();
-    var h='<div class="card"><div style="display:flex;justify-content:space-between;align-items:center"><h2 style="margin:0">Próximos atendimentos</h2>'+(novos.length?'<span class="novo">'+novos.length+' novo(s)</span>':'')+'</div>';
-    if(!datas.length)h+='<p class="muted" style="margin-top:10px">Nenhum atendimento agendado.</p>';
-    datas.forEach(function(ds){
-      h+='<h3 style="margin-top:16px">'+fmtDataLonga(ds)+'</h3><div class="slots">';
-      porData[ds].sort(function(a,b){return a.hora<b.hora?-1:1;}).forEach(function(a){
-        var cls=a.status==='FALTOU'?'faltou':a.status==='COMPARECEU'?'livre':'ocupado';
-        var ehNovo=vistos.indexOf(a.id)<0;
-        h+='<div class="slot '+cls+'"><div><span class="hora">'+a.hora+'</span>'+(ehNovo?'<span class="novo">novo</span>':'')+'<br><span class="tag">'+esc(a.nome)+'</span><br><span class="tag">'+esc(a.empresa)+'</span></div><div style="text-align:right">'+botoesPresenca(a)+'</div></div>';
-      });
-      h+='</div>';
-    });
-    h+='</div>';
-    $('t-corpo').innerHTML=h;
-    lsSet(vistosKey,r.agendamentos.map(function(a){return a.id;}));
-  }).catch(function(e){if(erroMsg(e)!=='__NO_GAS__'){$('t-corpo').innerHTML='<p class="muted">'+esc(erroMsg(e))+'</p>';}});
+  if(ESTADO.ac&&ESTADO.ac.alvo==='t-corpo'){ acCarregar(); return; }
+  acInit({alvo:'t-corpo',comEmpresa:true,comAcoes:true,fonte:'terapeuta'});
 }
 
 /* ============ helpers finais ============ */
