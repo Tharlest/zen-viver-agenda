@@ -160,6 +160,23 @@
   .salvo-ok{color:var(--neon-verde);font-size:13px;font-weight:700;margin-left:10px}
   .cli-tabela td{vertical-align:middle}
   .cli-badge{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--card2);border:1px solid var(--linha);color:var(--txt2);margin:1px}
+  /* Questionario de bem-estar (colaborador) */
+  .q-form{display:flex;flex-direction:column;gap:15px}
+  .q-item label{display:block;font-size:13px;color:var(--txt2);font-weight:600;margin-bottom:7px}
+  .q-val{display:inline-block;min-width:24px;text-align:center;background:var(--marca);color:#10210a;border-radius:6px;padding:1px 7px;font-weight:800;font-size:12px;margin-left:4px}
+  .q-item input[type=range]{width:100%;accent-color:var(--marca);height:6px}
+  .q-chips{display:flex;flex-wrap:wrap;gap:8px}
+  .q-chip{display:inline-flex;align-items:center;gap:6px;background:var(--bg2);border:1px solid var(--linha);border-radius:999px;padding:7px 13px;font-size:13px;cursor:pointer;color:var(--txt);font-weight:600;margin:0}
+  .q-chip input{width:auto;margin:0}
+  .q-chip:has(input:checked){background:rgba(54,184,255,.15);border-color:var(--neon-azul);color:var(--neon-azul)}
+  .q-resumo{font-size:11px;color:var(--neon-azul);margin-top:5px;background:rgba(54,184,255,.08);border:1px solid rgba(54,184,255,.25);border-radius:7px;padding:4px 8px}
+  /* Relatorio bem-estar: barras */
+  .barra{display:flex;align-items:center;gap:10px;margin:8px 0}
+  .barra-lab{width:120px;font-size:13px;color:var(--txt2);text-align:right;flex-shrink:0}
+  .barra-track{flex:1;height:14px;background:var(--bg2);border-radius:999px;overflow:hidden}
+  .barra-fill{height:100%;background:linear-gradient(90deg,var(--neon-azul),var(--marca));border-radius:999px;min-width:3px}
+  .barra-n{width:30px;font-weight:800;font-size:13px;text-align:right}
+  @media(max-width:620px){.barra-lab{width:84px;font-size:12px}}
   /* Liberar agenda */
   .lib-weeks{display:flex;flex-direction:column;gap:8px}
   .lib-week{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--card2);border:1px solid var(--linha);border-radius:10px;padding:12px 14px}
@@ -234,6 +251,7 @@
         <a class="adm-item" data-mtab="reg" onclick="mtab('reg')"><span class="ic">⚙️</span>Regras</a>
         <a class="adm-item" data-mtab="email" onclick="mtab('email')"><span class="ic">✉️</span>E-mails</a>
         <a class="adm-item" data-mtab="rel" onclick="mtab('rel')"><span class="ic">📊</span>Relatório</a>
+        <a class="adm-item" data-mtab="be" onclick="mtab('be')"><span class="ic">💛</span>Bem-estar</a>
         <a class="adm-item sair" onclick="sair()"><span class="ic">🚪</span>Sair</a>
       </aside>
       <main class="adm-corpo">
@@ -247,6 +265,7 @@
         <div id="m-reg" class="hide"></div>
         <div id="m-email" class="hide"></div>
         <div id="m-rel" class="hide"></div>
+        <div id="m-be" class="hide"></div>
       </main>
     </div>
   </div>
@@ -274,6 +293,7 @@
         <a class="adm-item" data-gtab="email" onclick="gtab('email')"><span class="ic">✉️</span>E-mails</a>
         <a class="adm-item" data-gtab="link" onclick="gtab('link')"><span class="ic">🔗</span>Link dos colaboradores</a>
         <a class="adm-item" data-gtab="rel" onclick="gtab('rel')"><span class="ic">📊</span>Relatório</a>
+        <a class="adm-item" data-gtab="be" onclick="gtab('be')"><span class="ic">💛</span>Bem-estar</a>
         <a class="adm-item sair" onclick="sair()"><span class="ic">🚪</span>Sair</a>
       </aside>
       <main class="adm-corpo">
@@ -285,6 +305,7 @@
         <div id="g-email" class="hide"></div>
         <div id="g-link" class="hide"></div>
         <div id="g-rel" class="hide"></div>
+        <div id="g-be" class="hide"></div>
       </main>
     </div>
   </div>
@@ -471,10 +492,38 @@ function renderSlotsColab(){
 function marcarSlot(data,hora){
   var restam=ESTADO.agenda.limiteSemana-ESTADO.agenda.usadasNaSemana;
   if(restam<=0)return toast('Você já atingiu o limite desta semana.','err');
-  toast('Reservando...');
-  gcall('marcar',ESTADO.slug,ESTADO.colab.email,ESTADO.colab.nome,data,hora).then(function(){
-    toast('Horário reservado! Confira seu e-mail. ✅','ok'); carregarAgendaColab();
-  }).catch(function(e){toast(erroMsg(e),'err');carregarAgendaColab();});
+  abrirQuestionario(data,hora);
+}
+var PARTES_CORPO=[['cabeca','Cabeça'],['pescoco','Pescoço'],['bracos','Braços'],['maos','Mãos'],['costas','Costas'],['lombar','Lombar'],['pernas','Pernas']];
+function abrirQuestionario(data,hora){
+  pararPoll();
+  var dia=ESTADO.agenda.grade.filter(function(g){return g.data===data;})[0];
+  var ter=dia?dia.terapeuta:'';
+  function slider(id,lab){ return '<div class="q-item"><label>'+lab+'<span class="q-val" id="'+id+'-v">0</span></label><input type="range" min="0" max="10" value="0" id="'+id+'" oninput="document.getElementById(\''+id+'-v\').textContent=this.value"></div>'; }
+  var chips=PARTES_CORPO.map(function(p){return '<label class="q-chip"><input type="checkbox" value="'+p[0]+'"> '+p[1]+'</label>';}).join('');
+  $('slots-titulo').innerHTML='Como você está hoje? 💛';
+  $('slots-area').innerHTML=
+    '<p class="muted" style="margin-bottom:12px">'+fmtDataLonga(data)+' às <b style="color:var(--neon-azul)">'+hora+'</b>'+(ter?' · '+esc(ter):'')+'.<br>Responda rapidinho — ajuda o terapeuta a cuidar melhor de você. Só você e os terapeutas veem isso.</p>'
+    +'<div class="q-form">'
+    + slider('q-estresse','Nível de estresse (0–10)')
+    + slider('q-ansiedade','Nível de ansiedade (0–10)')
+    + slider('q-irritabilidade','Nível de irritabilidade (0–10)')
+    + slider('q-dor','Nível de dor (0–10)')
+    + '<div class="q-item"><label>Onde você sente dor? (pode marcar vários)</label><div class="q-chips">'+chips+'</div></div>'
+    + '<div class="q-item"><label>Qual o seu setor? <span class="muted">(opcional)</span></label><input id="q-setor" placeholder="Ex: Financeiro"></div>'
+    + '</div>'
+    + '<button class="btn block" style="margin-top:16px" id="q-btn" onclick="confirmarAgendamento(\''+data+'\',\''+hora+'\')">Confirmar agendamento</button>'
+    + '<button class="btn ghost block" style="margin-top:8px" onclick="fecharQuestionario()">Voltar</button>';
+}
+function fecharQuestionario(){ carregarAgendaColab(); iniciarPoll(carregarAgendaColab,12000); }
+function confirmarAgendamento(data,hora){
+  var val=function(id){return parseInt((($(id)||{}).value)||'0',10)||0;};
+  var dores=[].slice.call(document.querySelectorAll('.q-chips input:checked')).map(function(c){return c.value;});
+  var q={estresse:val('q-estresse'),ansiedade:val('q-ansiedade'),irritabilidade:val('q-irritabilidade'),dor:val('q-dor'),dores:dores,setor:(($('q-setor')||{}).value||'').trim()};
+  var b=$('q-btn'); if(b){b.disabled=true;b.innerHTML='<span class="spin"></span> Reservando...';}
+  gcall('marcar',ESTADO.slug,ESTADO.colab.email,ESTADO.colab.nome,data,hora,q).then(function(){
+    toast('Horário reservado! ✅','ok'); ESTADO.diaSel=data; carregarAgendaColab(); iniciarPoll(carregarAgendaColab,12000);
+  }).catch(function(e){ if(b){b.disabled=false;b.textContent='Confirmar agendamento';} toast(erroMsg(e),'err'); });
 }
 function cancelarSlot(agId){
   if(!confirm('Cancelar este horário? Ele ficará livre para outra pessoa.'))return;
@@ -491,7 +540,7 @@ function fazerLoginMaster(){
   gcall('loginMaster',s).then(function(r){ESTADO.token=r.token;ESTADO.role='master';setCtx('<span class="pill">👑 Master</span>');show('tela-master');mtab('ag');}).catch(function(e){toast(erroMsg(e),'err');});
 }
 function mtab(t){
-  ['ag','lib','cli','emp','ter','neg','serv','reg','email','rel'].forEach(function(x){var c=$('m-'+x);if(c)c.classList.toggle('hide',x!==t);var el=document.querySelector('[data-mtab="'+x+'"]');if(el)el.classList.toggle('on',x===t);});
+  ['ag','lib','cli','emp','ter','neg','serv','reg','email','rel','be'].forEach(function(x){var c=$('m-'+x);if(c)c.classList.toggle('hide',x!==t);var el=document.querySelector('[data-mtab="'+x+'"]');if(el)el.classList.toggle('on',x===t);});
   pararPoll();
   if(t==='ag')masterAgendamentos();
   else if(t==='lib')telaLiberar('m-lib',true);
@@ -503,6 +552,7 @@ function mtab(t){
   else if(t==='reg')telaRegras('m-reg',true);
   else if(t==='email')telaEmails('m-email',true);
   else if(t==='rel')masterRelatorio();
+  else if(t==='be')telaBemEstar('m-be',true);
 }
 /* -- Master: agendamentos (tempo real) -- */
 function masterAgendamentos(){
@@ -591,6 +641,16 @@ function acCalendario(){
 }
 function acSelDia(ds){ ESTADO.acDiaSel=ds; acCalendario(); acLista(); }
 function acMudarMes(delta){ var m=ESTADO.acMes.mes+delta,a=ESTADO.acMes.ano; if(m<1){m=12;a--;} if(m>12){m=1;a++;} ESTADO.acMes={ano:a,mes:m}; acCarregar(); }
+function qResumo(q){
+  if(!q||typeof q!=='object') return '';
+  var mapa={}; PARTES_CORPO.forEach(function(p){mapa[p[0]]=p[1];});
+  var locais=(q.dores||[]).map(function(k){return mapa[k]||k;}).join(', ');
+  var h='<div class="q-resumo">💛 Estresse '+(q.estresse||0)+' · Ansiedade '+(q.ansiedade||0)+' · Irrit. '+(q.irritabilidade||0)+' · <b>Dor '+(q.dor||0)+'</b>';
+  if(locais) h+=' · 📍 '+esc(locais);
+  if(q.setor) h+=' · 🏢 '+esc(q.setor);
+  h+='</div>';
+  return h;
+}
 function acLista(){
   var o=ESTADO.ac, ds=ESTADO.acDiaSel, itens=((ESTADO.acMapa||{})[ds]||[]).slice().sort(function(a,b){return a.hora<b.hora?-1:1;});
   var html='<div class="ac-dia-titulo">'+fmtDataLonga(ds)+'</div>';
@@ -601,7 +661,7 @@ function acLista(){
     if(a.terapeuta)sub+=' · c/ '+esc(a.terapeuta);
     if(o.comEmpresa&&a.empresa)sub+=' · '+esc(a.empresa);
     html+='<div class="ac-row '+a.status+'"><div class="ac-hora">'+a.hora+'</div>'
-      +'<div class="ac-info"><b>'+esc(a.nome)+'</b><div class="ac-serv">'+sub+'</div></div>'
+      +'<div class="ac-info"><b>'+esc(a.nome)+'</b><div class="ac-serv">'+sub+'</div>'+qResumo(a.questionario)+'</div>'
       +'<span class="st '+a.status+'">'+rotuloStatus(a.status)+'</span>'
       +(o.comAcoes?'<div class="ac-acoes">'+botoesPresenca(a)+'</div>':'')
       +'</div>';
@@ -789,7 +849,7 @@ function fazerLoginGestor(){
   gcall('loginGestor',e,s).then(function(r){ESTADO.token=r.token;ESTADO.role='gestor';ESTADO.empresaNome=r.empresa.nome;setCtx('<b>'+esc(r.empresa.nome)+'</b><br><span class="pill">🏢 Gestora</span>');$('g-titulo').textContent=r.empresa.nome;show('tela-gestor');gtab('ag');}).catch(function(e){toast(erroMsg(e),'err');});
 }
 function gtab(t){
-  ['ag','lib','cli','neg','reg','email','link','rel'].forEach(function(x){var c=$('g-'+x);if(c)c.classList.toggle('hide',x!==t);var el=document.querySelector('[data-gtab="'+x+'"]');if(el)el.classList.toggle('on',x===t);});
+  ['ag','lib','cli','neg','reg','email','link','rel','be'].forEach(function(x){var c=$('g-'+x);if(c)c.classList.toggle('hide',x!==t);var el=document.querySelector('[data-gtab="'+x+'"]');if(el)el.classList.toggle('on',x===t);});
   pararPoll();
   if(t==='ag')gestorAgendamentos();
   else if(t==='lib')telaLiberar('g-lib',false);
@@ -799,6 +859,7 @@ function gtab(t){
   else if(t==='email')telaEmails('g-email',false);
   else if(t==='link')gestorLink();
   else if(t==='rel')relatorioUI('g-rel',false);
+  else if(t==='be')telaBemEstar('g-be',false);
 }
 function gestorAgendamentos(){
   $('g-ag').innerHTML='<div id="g-kpis"></div><div id="g-ag-cucco"></div>';
@@ -1015,6 +1076,29 @@ function toggleLiberar(seg, liberar){
   }).then(function(d){ if(d&&ESTADO.libCorpo) ESTADO.libCorpo.innerHTML=renderLiberar(d); }).catch(function(e){ toast(erroMsg(e),'err'); });
 }
 
+/* -------- RELATORIO DE BEM-ESTAR -------- */
+function telaBemEstar(alvo, comEmpresa){
+  admComEmpresa(alvo, comEmpresa, function(empId, corpo){
+    admCarregando(corpo);
+    gcall('relatorioBemEstar', ESTADO.token, {empresaId:empId||''}).then(function(d){ corpo.innerHTML=renderBemEstar(d); }).catch(function(e){ admErro(corpo,e); });
+  });
+}
+function beKpi(lab,val){ var v=(val==null?'—':val); var cor=(val==null?'var(--txt3)':(val>=7?'var(--neon-vermelho)':(val>=4?'var(--neon-laranja)':'var(--neon-verde)'))); return '<div class="kpi"><div class="n" style="color:'+cor+'">'+v+'</div><div class="l">'+lab+'</div></div>'; }
+function beBarras(obj, mapa){
+  var keys=Object.keys(obj||{}); if(!keys.length) return '<p class="muted">Sem respostas ainda.</p>';
+  keys.sort(function(a,b){return obj[b]-obj[a];});
+  var max=obj[keys[0]]||1;
+  return keys.map(function(k){ var lab=(mapa&&mapa[k])?mapa[k]:k; var pct=Math.round(obj[k]/max*100); return '<div class="barra"><div class="barra-lab">'+esc(lab)+'</div><div class="barra-track"><div class="barra-fill" style="width:'+pct+'%"></div></div><div class="barra-n">'+obj[k]+'</div></div>'; }).join('');
+}
+function renderBemEstar(d){
+  var m=d.medias||{}, mapa={}; PARTES_CORPO.forEach(function(p){mapa[p[0]]=p[1];});
+  var h='<div class="secao-tit">Relatório de bem-estar 💛</div><p class="secao-sub">Em tempo real, a partir dos questionários respondidos no agendamento. <b style="color:var(--txt)">'+(d.respostas||0)+'</b> resposta(s).</p>';
+  h+='<div class="card"><h3>Médias da equipe (0–10)</h3><div class="kpis">'+beKpi('Estresse',m.estresse)+beKpi('Ansiedade',m.ansiedade)+beKpi('Irritabilidade',m.irritabilidade)+beKpi('Dor',m.dor)+'</div></div>';
+  h+='<div class="card"><h3>Onde mais dói</h3>'+beBarras(d.dores,mapa)+'</div>';
+  h+='<div class="card"><h3>Respostas por setor</h3>'+beBarras(d.setores,null)+'</div>';
+  return h;
+}
+
 /* ===================================================================
    TERAPEUTA
 =================================================================== */
@@ -1044,7 +1128,7 @@ var RPC = {
   bootColaborador:      ['app_boot_colaborador',       ['p_slug']],
   cadastrarColaborador: ['app_cadastrar_colaborador',  ['p_slug','p_nome','p_email','p_celular']],
   getAgendaColaborador: ['app_get_agenda_colaborador', ['p_slug','p_email','p_ano','p_mes']],
-  marcar:               ['app_marcar',                 ['p_slug','p_email','p_nome','p_data','p_hora']],
+  marcar:               ['app_marcar',                 ['p_slug','p_email','p_nome','p_data','p_hora','p_questionario']],
   cancelar:             ['app_cancelar',               ['p_slug','p_email','p_ag']],
   logout:               ['app_logout',                 ['p_token']],
   loginMaster:          ['app_login_master',           ['p_senha']],
@@ -1068,7 +1152,8 @@ var RPC = {
   empresaConfigSet:     ['app_empresa_config_set',     ['p_token','p_empresa','p_patch']],
   listarClientes:       ['app_listar_clientes',        ['p_token','p_empresa']],
   liberacaoInfo:        ['app_liberacao',              ['p_token','p_empresa']],
-  liberarSemana:        ['app_liberar_semana',         ['p_token','p_empresa','p_segunda','p_liberar']]
+  liberarSemana:        ['app_liberar_semana',         ['p_token','p_empresa','p_segunda','p_liberar']],
+  relatorioBemEstar:    ['app_relatorio_bem_estar',    ['p_token','p_filtro']]
 };
 
 var ERROS = {
