@@ -160,6 +160,15 @@
   .salvo-ok{color:var(--neon-verde);font-size:13px;font-weight:700;margin-left:10px}
   .cli-tabela td{vertical-align:middle}
   .cli-badge{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--card2);border:1px solid var(--linha);color:var(--txt2);margin:1px}
+  /* Liberar agenda */
+  .lib-weeks{display:flex;flex-direction:column;gap:8px}
+  .lib-week{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--card2);border:1px solid var(--linha);border-radius:10px;padding:12px 14px}
+  .lib-week.aberta{border-left:3px solid var(--neon-verde)}
+  .lib-week.passada{opacity:.45}
+  .lib-tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 9px;border-radius:999px;margin-top:5px}
+  .lib-tag.auto{background:rgba(61,255,126,.15);color:var(--neon-verde)}
+  .lib-tag.manual{background:rgba(54,184,255,.15);color:var(--neon-azul)}
+  .lib-tag.fechada{background:var(--bg2);color:var(--txt3)}
   @media(max-width:780px){.adm{flex-direction:column}.adm-menu{width:100%;position:static;display:flex;flex-wrap:wrap;gap:4px}.adm-menu-h{width:100%}.adm-item{flex:1;min-width:120px;justify-content:center}.adm-item.sair{border-top:none;margin-top:4px}.campo-grid{grid-template-columns:1fr}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
@@ -216,6 +225,7 @@
       <aside class="adm-menu">
         <div class="adm-menu-h">👑 Painel Master</div>
         <a class="adm-item on" data-mtab="ag" onclick="mtab('ag')"><span class="ic">📅</span>Agenda</a>
+        <a class="adm-item" data-mtab="lib" onclick="mtab('lib')"><span class="ic">🔓</span>Liberar agenda</a>
         <a class="adm-item" data-mtab="cli" onclick="mtab('cli')"><span class="ic">👥</span>Clientes</a>
         <a class="adm-item" data-mtab="emp" onclick="mtab('emp')"><span class="ic">🏢</span>Empresas</a>
         <a class="adm-item" data-mtab="ter" onclick="mtab('ter')"><span class="ic">🧘</span>Terapeutas</a>
@@ -228,6 +238,7 @@
       </aside>
       <main class="adm-corpo">
         <div id="m-ag"></div>
+        <div id="m-lib" class="hide"></div>
         <div id="m-cli" class="hide"></div>
         <div id="m-emp" class="hide"></div>
         <div id="m-ter" class="hide"></div>
@@ -256,6 +267,7 @@
       <aside class="adm-menu">
         <div class="adm-menu-h" id="g-titulo">🏢 Painel da Empresa</div>
         <a class="adm-item on" data-gtab="ag" onclick="gtab('ag')"><span class="ic">📅</span>Agenda</a>
+        <a class="adm-item" data-gtab="lib" onclick="gtab('lib')"><span class="ic">🔓</span>Liberar agenda</a>
         <a class="adm-item" data-gtab="cli" onclick="gtab('cli')"><span class="ic">👥</span>Clientes</a>
         <a class="adm-item" data-gtab="neg" onclick="gtab('neg')"><span class="ic">🏷️</span>Dados do negócio</a>
         <a class="adm-item" data-gtab="reg" onclick="gtab('reg')"><span class="ic">⚙️</span>Regras</a>
@@ -266,6 +278,7 @@
       </aside>
       <main class="adm-corpo">
         <div id="g-ag"></div>
+        <div id="g-lib" class="hide"></div>
         <div id="g-cli" class="hide"></div>
         <div id="g-neg" class="hide"></div>
         <div id="g-reg" class="hide"></div>
@@ -478,9 +491,10 @@ function fazerLoginMaster(){
   gcall('loginMaster',s).then(function(r){ESTADO.token=r.token;ESTADO.role='master';setCtx('<span class="pill">👑 Master</span>');show('tela-master');mtab('ag');}).catch(function(e){toast(erroMsg(e),'err');});
 }
 function mtab(t){
-  ['ag','cli','emp','ter','neg','serv','reg','email','rel'].forEach(function(x){var c=$('m-'+x);if(c)c.classList.toggle('hide',x!==t);var el=document.querySelector('[data-mtab="'+x+'"]');if(el)el.classList.toggle('on',x===t);});
+  ['ag','lib','cli','emp','ter','neg','serv','reg','email','rel'].forEach(function(x){var c=$('m-'+x);if(c)c.classList.toggle('hide',x!==t);var el=document.querySelector('[data-mtab="'+x+'"]');if(el)el.classList.toggle('on',x===t);});
   pararPoll();
   if(t==='ag')masterAgendamentos();
+  else if(t==='lib')telaLiberar('m-lib',true);
   else if(t==='cli')telaClientes('m-cli',true);
   else if(t==='emp')masterEmpresas();
   else if(t==='ter')masterTerapeutas();
@@ -775,9 +789,10 @@ function fazerLoginGestor(){
   gcall('loginGestor',e,s).then(function(r){ESTADO.token=r.token;ESTADO.role='gestor';ESTADO.empresaNome=r.empresa.nome;setCtx('<b>'+esc(r.empresa.nome)+'</b><br><span class="pill">🏢 Gestora</span>');$('g-titulo').textContent=r.empresa.nome;show('tela-gestor');gtab('ag');}).catch(function(e){toast(erroMsg(e),'err');});
 }
 function gtab(t){
-  ['ag','cli','neg','reg','email','link','rel'].forEach(function(x){var c=$('g-'+x);if(c)c.classList.toggle('hide',x!==t);var el=document.querySelector('[data-gtab="'+x+'"]');if(el)el.classList.toggle('on',x===t);});
+  ['ag','lib','cli','neg','reg','email','link','rel'].forEach(function(x){var c=$('g-'+x);if(c)c.classList.toggle('hide',x!==t);var el=document.querySelector('[data-gtab="'+x+'"]');if(el)el.classList.toggle('on',x===t);});
   pararPoll();
   if(t==='ag')gestorAgendamentos();
+  else if(t==='lib')telaLiberar('g-lib',false);
   else if(t==='cli')telaClientes('g-cli',false);
   else if(t==='neg')telaDadosNegocio('g-neg',false);
   else if(t==='reg')telaRegras('g-reg',false);
@@ -966,6 +981,40 @@ function salvarEmails(empId, btn){
   gcall('empresaConfigSet', ESTADO.token, empId||null, {email:email}).then(function(){ if(btn)btn.disabled=false; admOk('em-ok'); }).catch(function(e){ if(btn)btn.disabled=false; toast(erroMsg(e),'err'); });
 }
 
+/* -------- LIBERAR AGENDA -------- */
+function libD(s){ var p=s.split('-'); return new Date(Date.UTC(+p[0],+p[1]-1,+p[2])); }
+function libIso(d){ return d.getUTCFullYear()+'-'+p2(d.getUTCMonth()+1)+'-'+p2(d.getUTCDate()); }
+function libAdd(d,n){ var x=new Date(d.getTime()); x.setUTCDate(x.getUTCDate()+n); return x; }
+function libSeg(s){ var d=libD(s); var w=d.getUTCDay(); return libAdd(d, w===0?-6:1-w); }
+function telaLiberar(alvo, comEmpresa){
+  admComEmpresa(alvo, comEmpresa, function(empId, corpo){
+    ESTADO.libEmp=empId; ESTADO.libCorpo=corpo;
+    admCarregando(corpo);
+    gcall('liberacaoInfo', ESTADO.token, empId).then(function(d){ corpo.innerHTML=renderLiberar(d); }).catch(function(e){ admErro(corpo,e); });
+  });
+}
+function renderLiberar(d){
+  var hoje=d.hoje, autoIni=d.auto.ini, libs=d.liberadas||[];
+  var h='<div class="secao-tit">Liberar agenda</div><p class="secao-sub">A agenda abre sozinha todo <b style="color:var(--txt)">domingo às 11:00</b> para a semana seguinte. Aqui você pode liberar semanas à frente quando quiser.</p><div class="card"><div class="lib-weeks">';
+  var segHoje=libSeg(hoje);
+  for(var i=0;i<8;i++){
+    var seg=libAdd(segHoje,i*7), dom=libAdd(seg,6), segStr=libIso(seg);
+    var ehAuto=(segStr===autoIni), liberada=libs.indexOf(segStr)>=0, passada=libIso(dom)<hoje;
+    var tag= ehAuto?'<span class="lib-tag auto">Aberta (automática)</span>' : (liberada?'<span class="lib-tag manual">Aberta</span>':'<span class="lib-tag fechada">Fechada</span>');
+    var btn='';
+    if(!ehAuto && !passada){ btn = liberada ? '<button class="btn danger sm" onclick="toggleLiberar(\''+segStr+'\',false)">Fechar</button>' : '<button class="btn sm" onclick="toggleLiberar(\''+segStr+'\',true)">Liberar</button>'; }
+    h+='<div class="lib-week'+((ehAuto||liberada)?' aberta':'')+(passada?' passada':'')+'"><div><b>'+fmtData(segStr)+' – '+fmtData(libIso(dom))+'</b><br>'+tag+'</div><div>'+btn+'</div></div>';
+  }
+  h+='</div></div>';
+  return h;
+}
+function toggleLiberar(seg, liberar){
+  gcall('liberarSemana', ESTADO.token, ESTADO.libEmp||null, seg, liberar).then(function(){
+    toast(liberar?'Semana liberada! ✅':'Semana fechada.','ok');
+    return gcall('liberacaoInfo', ESTADO.token, ESTADO.libEmp);
+  }).then(function(d){ if(d&&ESTADO.libCorpo) ESTADO.libCorpo.innerHTML=renderLiberar(d); }).catch(function(e){ toast(erroMsg(e),'err'); });
+}
+
 /* ===================================================================
    TERAPEUTA
 =================================================================== */
@@ -1017,7 +1066,9 @@ var RPC = {
   relatorioAssiduidade: ['app_relatorio',              ['p_token','p_filtro']],
   empresaConfig:        ['app_empresa_config',         ['p_token','p_empresa']],
   empresaConfigSet:     ['app_empresa_config_set',     ['p_token','p_empresa','p_patch']],
-  listarClientes:       ['app_listar_clientes',        ['p_token','p_empresa']]
+  listarClientes:       ['app_listar_clientes',        ['p_token','p_empresa']],
+  liberacaoInfo:        ['app_liberacao',              ['p_token','p_empresa']],
+  liberarSemana:        ['app_liberar_semana',         ['p_token','p_empresa','p_segunda','p_liberar']]
 };
 
 var ERROS = {
