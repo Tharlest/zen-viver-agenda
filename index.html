@@ -141,6 +141,26 @@
   .cal .day.temag:hover{transform:scale(1.05)}
   .cal .day .badge{position:absolute;top:2px;right:3px;background:var(--neon-azul);color:#06210f;font-size:9px;font-weight:800;min-width:15px;height:15px;line-height:15px;text-align:center;border-radius:999px;padding:0 3px}
   @media(max-width:620px){.kpis{grid-template-columns:1fr 1fr}.grid-perfis{grid-template-columns:1fr}.topbar img{height:34px}.agenda-cucco{flex-direction:column}.ac-rows{max-height:none}}
+  /* Painel de administracao: menu lateral (amigavel, intuitivo, zen) */
+  .adm{display:flex;gap:18px;align-items:flex-start;margin-top:10px}
+  .adm-menu{width:234px;flex-shrink:0;background:var(--card);border:1px solid var(--linha);border-radius:16px;padding:10px;position:sticky;top:78px;box-shadow:var(--sombra)}
+  .adm-menu-h{font-size:13px;font-weight:800;color:var(--txt2);padding:8px 12px 12px;letter-spacing:.2px}
+  .adm-item{display:flex;align-items:center;gap:11px;padding:11px 13px;border-radius:11px;color:var(--txt2);cursor:pointer;font-size:14px;font-weight:600;text-decoration:none;transition:.14s;margin-bottom:2px}
+  .adm-item:hover{background:var(--card2);color:var(--txt)}
+  .adm-item.on{background:var(--marca);color:#10210a}
+  .adm-item .ic{font-size:16px;width:20px;text-align:center}
+  .adm-item.sair{color:var(--txt3);margin-top:10px;border-top:1px solid var(--linha);border-radius:0 0 11px 11px}
+  .adm-item.sair:hover{color:var(--neon-vermelho)}
+  .adm-corpo{flex:1;min-width:0}
+  .adm-corpo>div>.card:first-child,.adm-corpo>.card:first-child{margin-top:0}
+  .secao-tit{font-size:20px;font-weight:800;margin:2px 2px 4px}
+  .secao-sub{color:var(--txt2);font-size:13px;margin:0 2px 14px}
+  .campo-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .campo-grid .full{grid-column:1 / -1}
+  .salvo-ok{color:var(--neon-verde);font-size:13px;font-weight:700;margin-left:10px}
+  .cli-tabela td{vertical-align:middle}
+  .cli-badge{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;background:var(--card2);border:1px solid var(--linha);color:var(--txt2);margin:1px}
+  @media(max-width:780px){.adm{flex-direction:column}.adm-menu{width:100%;position:static;display:flex;flex-wrap:wrap;gap:4px}.adm-menu-h{width:100%}.adm-item{flex:1;min-width:120px;justify-content:center}.adm-item.sair{border-top:none;margin-top:4px}.campo-grid{grid-template-columns:1fr}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
 </head>
@@ -192,18 +212,32 @@
 
   <!-- ====== MASTER PAINEL ====== -->
   <div id="tela-master" class="hide">
-    <h1>Painel Master</h1>
-    <div class="tabs">
-      <div class="tab on" data-mtab="ag" onclick="mtab('ag')">Agendamentos</div>
-      <div class="tab" data-mtab="emp" onclick="mtab('emp')">Empresas</div>
-      <div class="tab" data-mtab="ter" onclick="mtab('ter')">Terapeutas</div>
-      <div class="tab" data-mtab="rel" onclick="mtab('rel')">Relatório</div>
+    <div class="adm">
+      <aside class="adm-menu">
+        <div class="adm-menu-h">👑 Painel Master</div>
+        <a class="adm-item on" data-mtab="ag" onclick="mtab('ag')"><span class="ic">📅</span>Agenda</a>
+        <a class="adm-item" data-mtab="cli" onclick="mtab('cli')"><span class="ic">👥</span>Clientes</a>
+        <a class="adm-item" data-mtab="emp" onclick="mtab('emp')"><span class="ic">🏢</span>Empresas</a>
+        <a class="adm-item" data-mtab="ter" onclick="mtab('ter')"><span class="ic">🧘</span>Terapeutas</a>
+        <a class="adm-item" data-mtab="neg" onclick="mtab('neg')"><span class="ic">🏷️</span>Dados do negócio</a>
+        <a class="adm-item" data-mtab="serv" onclick="mtab('serv')"><span class="ic">💆</span>Serviços</a>
+        <a class="adm-item" data-mtab="reg" onclick="mtab('reg')"><span class="ic">⚙️</span>Regras</a>
+        <a class="adm-item" data-mtab="email" onclick="mtab('email')"><span class="ic">✉️</span>E-mails</a>
+        <a class="adm-item" data-mtab="rel" onclick="mtab('rel')"><span class="ic">📊</span>Relatório</a>
+        <a class="adm-item sair" onclick="sair()"><span class="ic">🚪</span>Sair</a>
+      </aside>
+      <main class="adm-corpo">
+        <div id="m-ag"></div>
+        <div id="m-cli" class="hide"></div>
+        <div id="m-emp" class="hide"></div>
+        <div id="m-ter" class="hide"></div>
+        <div id="m-neg" class="hide"></div>
+        <div id="m-serv" class="hide"></div>
+        <div id="m-reg" class="hide"></div>
+        <div id="m-email" class="hide"></div>
+        <div id="m-rel" class="hide"></div>
+      </main>
     </div>
-    <div id="m-ag"></div>
-    <div id="m-emp" class="hide"></div>
-    <div id="m-ter" class="hide"></div>
-    <div id="m-rel" class="hide"></div>
-    <div class="center" style="margin-top:18px"><button class="btn ghost sm" onclick="sair()">Sair</button></div>
   </div>
 
   <!-- ====== GESTOR LOGIN ====== -->
@@ -218,16 +252,28 @@
     </div>
   </div>
   <div id="tela-gestor" class="hide">
-    <h1 id="g-titulo">Painel da Empresa</h1>
-    <div class="tabs">
-      <div class="tab on" data-gtab="ag" onclick="gtab('ag')">Agendamentos</div>
-      <div class="tab" data-gtab="rel" onclick="gtab('rel')">Relatório</div>
-      <div class="tab" data-gtab="link" onclick="gtab('link')">Link dos colaboradores</div>
+    <div class="adm">
+      <aside class="adm-menu">
+        <div class="adm-menu-h" id="g-titulo">🏢 Painel da Empresa</div>
+        <a class="adm-item on" data-gtab="ag" onclick="gtab('ag')"><span class="ic">📅</span>Agenda</a>
+        <a class="adm-item" data-gtab="cli" onclick="gtab('cli')"><span class="ic">👥</span>Clientes</a>
+        <a class="adm-item" data-gtab="neg" onclick="gtab('neg')"><span class="ic">🏷️</span>Dados do negócio</a>
+        <a class="adm-item" data-gtab="reg" onclick="gtab('reg')"><span class="ic">⚙️</span>Regras</a>
+        <a class="adm-item" data-gtab="email" onclick="gtab('email')"><span class="ic">✉️</span>E-mails</a>
+        <a class="adm-item" data-gtab="link" onclick="gtab('link')"><span class="ic">🔗</span>Link dos colaboradores</a>
+        <a class="adm-item" data-gtab="rel" onclick="gtab('rel')"><span class="ic">📊</span>Relatório</a>
+        <a class="adm-item sair" onclick="sair()"><span class="ic">🚪</span>Sair</a>
+      </aside>
+      <main class="adm-corpo">
+        <div id="g-ag"></div>
+        <div id="g-cli" class="hide"></div>
+        <div id="g-neg" class="hide"></div>
+        <div id="g-reg" class="hide"></div>
+        <div id="g-email" class="hide"></div>
+        <div id="g-link" class="hide"></div>
+        <div id="g-rel" class="hide"></div>
+      </main>
     </div>
-    <div id="g-ag"></div>
-    <div id="g-rel" class="hide"></div>
-    <div id="g-link" class="hide"></div>
-    <div class="center" style="margin-top:18px"><button class="btn ghost sm" onclick="sair()">Sair</button></div>
   </div>
 
   <!-- ====== TERAPEUTA ====== -->
@@ -317,17 +363,18 @@ function telaCadastroColab(r){
     +'<h2>Bem-vindo(a)! 💆</h2>'
     +'<p class="sub">Agende seu horário de Quick Massage na '+esc(r.empresa.nome)+'. Comece com seu nome e e-mail.</p>'
     +'<label>Nome completo</label><input id="c-nome" autocomplete="name">'
+    +'<label>Celular (WhatsApp)</label><input id="c-cel" inputmode="tel" autocomplete="tel" placeholder="(85) 99999-0000">'
     +'<label>E-mail</label><input id="c-email" type="email" autocomplete="email">'
     +'<button class="btn block" style="margin-top:14px" id="c-btn" onclick="cadastrarColab()">Continuar</button>'
     +'<p class="muted center" style="margin-top:10px">Usaremos seu e-mail para enviar a confirmação e o lembrete.</p>'
     +'</div>';
 }
 function cadastrarColab(){
-  var nome=$('c-nome').value.trim(), email=$('c-email').value.trim();
+  var nome=$('c-nome').value.trim(), email=$('c-email').value.trim(), cel=(($('c-cel')||{}).value||'').trim();
   if(nome.length<2)return toast('Informe seu nome.','err');
   if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email))return toast('E-mail inválido.','err');
   var b=$('c-btn');b.disabled=true;b.innerHTML='<span class="spin"></span>';
-  gcall('cadastrarColaborador',ESTADO.slug,nome,email).then(function(c){
+  gcall('cadastrarColaborador',ESTADO.slug,nome,email,cel).then(function(c){
     ESTADO.colab={nome:c.nome,email:c.email};lsSet('colab_'+ESTADO.slug,ESTADO.colab);
     telaAgendaColab();
   }).catch(function(e){b.disabled=false;b.textContent='Continuar';toast(erroMsg(e),'err');});
@@ -431,12 +478,17 @@ function fazerLoginMaster(){
   gcall('loginMaster',s).then(function(r){ESTADO.token=r.token;ESTADO.role='master';setCtx('<span class="pill">👑 Master</span>');show('tela-master');mtab('ag');}).catch(function(e){toast(erroMsg(e),'err');});
 }
 function mtab(t){
-  ['ag','emp','ter','rel'].forEach(function(x){$('m-'+x).classList.toggle('hide',x!==t);document.querySelector('[data-mtab="'+x+'"]').classList.toggle('on',x===t);});
+  ['ag','cli','emp','ter','neg','serv','reg','email','rel'].forEach(function(x){var c=$('m-'+x);if(c)c.classList.toggle('hide',x!==t);var el=document.querySelector('[data-mtab="'+x+'"]');if(el)el.classList.toggle('on',x===t);});
   pararPoll();
   if(t==='ag')masterAgendamentos();
-  if(t==='emp')masterEmpresas();
-  if(t==='ter')masterTerapeutas();
-  if(t==='rel')masterRelatorio();
+  else if(t==='cli')telaClientes('m-cli',true);
+  else if(t==='emp')masterEmpresas();
+  else if(t==='ter')masterTerapeutas();
+  else if(t==='neg')telaDadosNegocio('m-neg',true);
+  else if(t==='serv')telaServicos('m-serv');
+  else if(t==='reg')telaRegras('m-reg',true);
+  else if(t==='email')telaEmails('m-email',true);
+  else if(t==='rel')masterRelatorio();
 }
 /* -- Master: agendamentos (tempo real) -- */
 function masterAgendamentos(){
@@ -723,11 +775,15 @@ function fazerLoginGestor(){
   gcall('loginGestor',e,s).then(function(r){ESTADO.token=r.token;ESTADO.role='gestor';ESTADO.empresaNome=r.empresa.nome;setCtx('<b>'+esc(r.empresa.nome)+'</b><br><span class="pill">🏢 Gestora</span>');$('g-titulo').textContent=r.empresa.nome;show('tela-gestor');gtab('ag');}).catch(function(e){toast(erroMsg(e),'err');});
 }
 function gtab(t){
-  ['ag','rel','link'].forEach(function(x){$('g-'+x).classList.toggle('hide',x!==t);document.querySelector('[data-gtab="'+x+'"]').classList.toggle('on',x===t);});
+  ['ag','cli','neg','reg','email','link','rel'].forEach(function(x){var c=$('g-'+x);if(c)c.classList.toggle('hide',x!==t);var el=document.querySelector('[data-gtab="'+x+'"]');if(el)el.classList.toggle('on',x===t);});
   pararPoll();
   if(t==='ag')gestorAgendamentos();
-  if(t==='rel')relatorioUI('g-rel',false);
-  if(t==='link')gestorLink();
+  else if(t==='cli')telaClientes('g-cli',false);
+  else if(t==='neg')telaDadosNegocio('g-neg',false);
+  else if(t==='reg')telaRegras('g-reg',false);
+  else if(t==='email')telaEmails('g-email',false);
+  else if(t==='link')gestorLink();
+  else if(t==='rel')relatorioUI('g-rel',false);
 }
 function gestorAgendamentos(){
   $('g-ag').innerHTML='<div id="g-kpis"></div><div id="g-ag-cucco"></div>';
@@ -744,6 +800,170 @@ function gestorLink(){
   gcall('gestorResumo',ESTADO.token).then(function(r){
     $('g-link').innerHTML='<div class="card"><h2>Link para os colaboradores</h2><p class="sub">Compartilhe este link com todos os funcionários da empresa. Eles se cadastram e agendam por aqui.</p><div class="lnk">'+esc(r.empresa.link)+'</div><button class="btn sec" style="margin-top:10px" onclick="copiar(\''+r.empresa.link.replace(/'/g,"\\'")+'\')">Copiar link</button><p class="muted" style="margin-top:12px">A agenda abre todo domingo às 20h para a semana seguinte.</p></div>';
   }).catch(falhaCarregar('g-link'));
+}
+
+/* ===================================================================
+   PAINEL DE ADMINISTRACAO (Master e Gestora)
+   Clientes · Dados do negocio · Servicos · Regras · E-mails
+=================================================================== */
+// Para telas do Master: seletor de empresa. Para Gestora: usa a propria.
+function admComEmpresa(alvo, comEmpresa, render){
+  var root=$(alvo);
+  if(!comEmpresa){ render(null, root); return; }
+  function go(emps){
+    if(!emps||!emps.length){ root.innerHTML='<div class="secao-tit">Selecione uma empresa</div><div class="card"><p class="muted">Cadastre uma empresa primeiro no menu <b>Empresas</b>.</p></div>'; return; }
+    if(!(ESTADO.admEmpSel && emps.some(function(e){return e.id===ESTADO.admEmpSel;}))) ESTADO.admEmpSel=emps[0].id;
+    var ops=emps.map(function(e){return '<option value="'+e.id+'"'+(e.id===ESTADO.admEmpSel?' selected':'')+'>'+esc(e.nome)+'</option>';}).join('');
+    root.innerHTML='<div class="card" style="margin-top:0;padding:12px 16px"><label>Empresa</label><select id="adm-emp-sel">'+ops+'</select></div><div id="adm-emp-corpo"></div>';
+    var selEl=root.querySelector('#adm-emp-sel'), corpo=root.querySelector('#adm-emp-corpo');
+    selEl.onchange=function(){ ESTADO.admEmpSel=selEl.value; render(selEl.value, corpo); };
+    render(ESTADO.admEmpSel, corpo);
+  }
+  if(ESTADO.admEmpresas){ go(ESTADO.admEmpresas); }
+  else gcall('masterResumo',ESTADO.token).then(function(r){ ESTADO.admEmpresas=r.empresas; go(r.empresas); }).catch(function(e){ root.innerHTML='<div class="card"><p class="muted">'+esc(erroMsg(e))+'</p></div>'; });
+}
+function admErro(corpo,e){ corpo.innerHTML='<div class="card"><p class="muted">'+esc(erroMsg(e))+'</p></div>'; }
+function admCarregando(corpo){ corpo.innerHTML='<div class="card"><div class="loading"><span class="spin"></span> Carregando...</div></div>'; }
+function admOk(id){ var o=$(id); if(o){ o.innerHTML='<span class="salvo-ok">✓ Salvo!</span>'; setTimeout(function(){var q=$(id);if(q)q.innerHTML='';},2500);} }
+
+/* -------- CLIENTES -------- */
+function telaClientes(alvo, comEmpresa){
+  admComEmpresa(alvo, comEmpresa, function(empId, corpo){
+    admCarregando(corpo);
+    gcall('listarClientes', ESTADO.token, empId).then(function(l){
+      ESTADO.cliCache=l; ESTADO.cliComEmp=comEmpresa;
+      corpo.innerHTML='<div class="secao-tit">Clientes</div><p class="secao-sub">Quem se cadastrou e os dias em que fez o serviço. Dados protegidos (LGPD).</p>'
+        +'<div class="card"><input id="cli-busca" placeholder="Buscar por nome ou e-mail..." oninput="filtraClientes()" style="margin-bottom:12px"><div id="cli-lista">'+tabelaClientes(l,comEmpresa)+'</div></div>';
+    }).catch(function(e){ admErro(corpo,e); });
+  });
+}
+function tabelaClientes(l, comEmpresa){
+  if(!l.length) return '<p class="muted center" style="padding:22px">Nenhum cliente cadastrado ainda. Eles aparecem aqui quando se cadastram pelo link da empresa.</p>';
+  var h='<div style="overflow-x:auto"><table class="cli-tabela"><tr><th>Cliente</th><th>Celular</th><th>E-mail</th>'+(comEmpresa?'<th>Empresa</th>':'')+'<th>Incluído em</th><th>Atend.</th><th>Dias que fez o serviço</th></tr>';
+  l.forEach(function(c){
+    var datas=(c.datas||[]).slice(0,12).map(function(d){return '<span class="cli-badge">'+fmtData(d)+'</span>';}).join('');
+    if(!datas) datas='<span class="muted">—</span>';
+    h+='<tr><td><b>'+esc(c.nome)+'</b></td><td>'+esc(c.celular||'—')+'</td><td class="muted">'+esc(c.email)+'</td>'+(comEmpresa?'<td>'+esc(c.empresa)+'</td>':'')
+      +'<td>'+fmtData(c.incluidoEm)+'</td><td><b>'+(c.totalAtend||0)+'</b> <span class="muted">✓'+(c.compareceu||0)+' ✕'+(c.faltou||0)+'</span></td><td>'+datas+'</td></tr>';
+  });
+  h+='</table></div><p class="muted" style="margin-top:8px">'+l.length+' cliente(s)</p>';
+  return h;
+}
+function filtraClientes(){
+  var q=(($('cli-busca')||{}).value||'').toLowerCase();
+  var l=(ESTADO.cliCache||[]).filter(function(c){return (c.nome+' '+c.email+' '+(c.celular||'')).toLowerCase().indexOf(q)>=0;});
+  $('cli-lista').innerHTML=tabelaClientes(l, ESTADO.cliComEmp);
+}
+
+/* -------- DADOS DO NEGOCIO -------- */
+function telaDadosNegocio(alvo, comEmpresa){
+  admComEmpresa(alvo, comEmpresa, function(empId, corpo){
+    admCarregando(corpo);
+    gcall('empresaConfig', ESTADO.token, empId).then(function(d){
+      var n=(d.config&&d.config.negocio)||{};
+      function f(id,lab,val,ph,full){ return '<div'+(full?' class="full"':'')+'><label>'+lab+'</label><input id="'+id+'" value="'+esc(val||'')+'"'+(ph?' placeholder="'+esc(ph)+'"':'')+'></div>'; }
+      corpo.innerHTML='<div class="secao-tit">Dados do negócio</div><p class="secao-sub">Informações da empresa responsável por esta agenda.</p>'
+        +'<div class="card"><div class="campo-grid">'
+        +f('dn-nome','Nome do negócio', n.nome||d.nome, 'Ex: Zen Viver Terapias')
+        +f('dn-slogan','Slogan', n.slogan, 'Pessoas valem mais que coisas')
+        +f('dn-categoria','Categoria', n.categoria, 'Massoterapia')
+        +f('dn-email','E-mail de contato', n.email||d.gestorEmail, 'agenda@empresa.com')
+        +f('dn-telefone','Telefone', n.telefone, '(85) 99999-0000')
+        +f('dn-cep','CEP', n.cep, '00000-000')
+        +f('dn-endereco','Endereço', n.endereco, 'Rua...', true)
+        +f('dn-numero','Número', n.numero)
+        +f('dn-complemento','Complemento', n.complemento)
+        +f('dn-bairro','Bairro', n.bairro)
+        +f('dn-cidade','Cidade', n.cidade)
+        +f('dn-estado','Estado (UF)', n.estado, 'CE')
+        +'</div><button class="btn" style="margin-top:14px" onclick="salvarDadosNegocio(\''+(empId||'')+'\',this)">Salvar dados</button><span id="dn-ok"></span></div>';
+    }).catch(function(e){ admErro(corpo,e); });
+  });
+}
+function salvarDadosNegocio(empId, btn){
+  var g=function(id){return (($(id)||{}).value||'').trim();};
+  var negocio={nome:g('dn-nome'),slogan:g('dn-slogan'),categoria:g('dn-categoria'),email:g('dn-email'),telefone:g('dn-telefone'),cep:g('dn-cep'),endereco:g('dn-endereco'),numero:g('dn-numero'),complemento:g('dn-complemento'),bairro:g('dn-bairro'),cidade:g('dn-cidade'),estado:g('dn-estado')};
+  if(btn)btn.disabled=true;
+  gcall('empresaConfigSet', ESTADO.token, empId||null, {negocio:negocio}).then(function(){ if(btn)btn.disabled=false; admOk('dn-ok'); }).catch(function(e){ if(btn)btn.disabled=false; toast(erroMsg(e),'err'); });
+}
+
+/* -------- SERVICOS (so Master) -------- */
+function telaServicos(alvo){
+  admComEmpresa(alvo, true, function(empId, corpo){
+    admCarregando(corpo);
+    gcall('empresaConfig', ESTADO.token, empId).then(function(d){
+      var s=(d.config&&d.config.servico)||{};
+      corpo.innerHTML='<div class="secao-tit">Serviço</div><p class="secao-sub">O serviço oferecido nesta empresa. Apenas o Master pode alterar.</p>'
+        +'<div class="card"><div class="campo-grid">'
+        +'<div class="full"><label>Nome do serviço</label><input id="sv-nome" value="'+esc(s.nome||'Quick Massage')+'"></div>'
+        +'<div class="full"><label>Descrição</label><input id="sv-desc" value="'+esc(s.descricao||'Sessão de massagem relaxante na cadeira.')+'"></div>'
+        +'<div><label>Duração da sessão (min)</label><input id="sv-dur" type="number" min="5" step="5" value="'+esc(String(s.duracao||20))+'"></div>'
+        +'<div><label>Preço (R$) — opcional</label><input id="sv-preco" value="'+esc(s.preco||'0,00')+'"></div>'
+        +'</div><p class="muted" style="margin-top:8px">A duração aparece para o cliente. O intervalo entre horários da agenda é de 20 min.</p>'
+        +'<button class="btn" style="margin-top:12px" onclick="salvarServico(\''+empId+'\',this)">Salvar serviço</button><span id="sv-ok"></span></div>';
+    }).catch(function(e){ admErro(corpo,e); });
+  });
+}
+function salvarServico(empId, btn){
+  var servico={nome:($('sv-nome').value.trim()||'Quick Massage'), descricao:$('sv-desc').value.trim(), duracao:parseInt($('sv-dur').value)||20, preco:$('sv-preco').value.trim()};
+  if(btn)btn.disabled=true;
+  gcall('empresaConfigSet', ESTADO.token, empId, {servico:servico}).then(function(){ if(btn)btn.disabled=false; admOk('sv-ok'); }).catch(function(e){ if(btn)btn.disabled=false; toast(erroMsg(e),'err'); });
+}
+
+/* -------- REGRAS DE AGENDAMENTO -------- */
+function selOp(id,label,val,opcoes){
+  var o=opcoes.map(function(p){return '<option value="'+p[0]+'"'+(String(val)===String(p[0])?' selected':'')+'>'+p[1]+'</option>';}).join('');
+  return '<div><label>'+label+'</label><select id="'+id+'">'+o+'</select></div>';
+}
+function telaRegras(alvo, comEmpresa){
+  admComEmpresa(alvo, comEmpresa, function(empId, corpo){
+    admCarregando(corpo);
+    gcall('empresaConfig', ESTADO.token, empId).then(function(d){
+      var r=(d.config&&d.config.regras)||{};
+      var h='<div class="secao-tit">Regras de agendamento</div><p class="secao-sub">Configure como os clientes podem marcar. É só escolher nas opções.</p><div class="card"><div class="campo-grid">';
+      if(comEmpresa) h+=selOp('rg-limite','Máx. por colaborador / semana', (d.limiteSemana||1), [[1,'1 por semana'],[2,'2 por semana'],[3,'3 por semana'],[5,'5 por semana'],[99,'Sem limite']]);
+      else h+='<div><label>Máx. por colaborador / semana</label><input value="'+(d.limiteSemana||1)+' por semana" disabled></div>';
+      h+=selOp('rg-maxdia','Máximo por dia', (r.maxDia||1), [[1,'1 por dia'],[2,'2 por dia'],[3,'3 por dia'],[99,'Sem limite']]);
+      h+=selOp('rg-antmarcar','Antecedência mín. p/ marcar', (r.antMarcarH||0), [[0,'Sem antecedência'],[1,'1 hora antes'],[2,'2 horas'],[3,'3 horas'],[12,'12 horas'],[24,'24 horas']]);
+      h+=selOp('rg-antcancelar','Antecedência mín. p/ cancelar', (r.antCancelarH||0), [[0,'A qualquer momento'],[1,'1 hora antes'],[2,'2 horas'],[3,'3 horas'],[12,'12 horas'],[24,'24 horas']]);
+      h+=selOp('rg-cel','Campo Celular no cadastro', (r.campoCelular||'opcional'), [['opcional','Opcional'],['obrigatorio','Obrigatório'],['oculto','Não mostrar']]);
+      h+=selOp('rg-email','Campo E-mail no cadastro', (r.campoEmail||'obrigatorio'), [['obrigatorio','Obrigatório'],['opcional','Opcional']]);
+      h+='</div><p class="muted" style="margin-top:8px">Os campos do cadastro e o limite semanal já valem na hora. Antecedências e máximo por dia ficam salvos e entram em vigor na próxima atualização do motor de agendamento.</p>';
+      h+='<button class="btn" style="margin-top:12px" onclick="salvarRegras(\''+(empId||'')+'\','+(comEmpresa?'true':'false')+',this)">Salvar regras</button><span id="rg-ok"></span></div>';
+      corpo.innerHTML=h;
+    }).catch(function(e){ admErro(corpo,e); });
+  });
+}
+function salvarRegras(empId, comEmpresa, btn){
+  var regras={ maxDia:parseInt($('rg-maxdia').value)||1, antMarcarH:parseInt($('rg-antmarcar').value)||0, antCancelarH:parseInt($('rg-antcancelar').value)||0, campoCelular:$('rg-cel').value, campoEmail:$('rg-email').value };
+  if(comEmpresa && $('rg-limite')) regras.limiteSemana=parseInt($('rg-limite').value)||1;
+  if(btn)btn.disabled=true;
+  gcall('empresaConfigSet', ESTADO.token, empId||null, {regras:regras}).then(function(){
+    if(comEmpresa && empId && regras.limiteSemana){ ESTADO.admEmpresas=null; return gcall('editarEmpresa', ESTADO.token, empId, {limiteSemana:regras.limiteSemana}); }
+  }).then(function(){ if(btn)btn.disabled=false; admOk('rg-ok'); }).catch(function(e){ if(btn)btn.disabled=false; toast(erroMsg(e),'err'); });
+}
+
+/* -------- E-MAILS -------- */
+function telaEmails(alvo, comEmpresa){
+  admComEmpresa(alvo, comEmpresa, function(empId, corpo){
+    admCarregando(corpo);
+    gcall('empresaConfig', ESTADO.token, empId).then(function(d){
+      var m=(d.config&&d.config.email)||{};
+      corpo.innerHTML='<div class="secao-tit">E-mails</div><p class="secao-sub">Mensagens enviadas ao cliente ao marcar ou cancelar.</p>'
+        +'<div class="card"><div class="campo-grid">'
+        +'<div class="full"><label>Nome do remetente</label><input id="em-remetente" value="'+esc(m.remetente||'Zen Viver Agendamento')+'"></div>'
+        +'<div class="full"><label>Assunto — ao marcar</label><input id="em-amarcar" value="'+esc(m.assuntoMarcar||'Agendamento da sua sessão de massagem')+'"></div>'
+        +'<div class="full"><label>Assunto — ao cancelar</label><input id="em-acancelar" value="'+esc(m.assuntoCancelar||'Cancelamento da sua sessão de massagem')+'"></div>'
+        +'<div class="full"><label>Texto extra no e-mail de confirmação</label><textarea id="em-texto" rows="3">'+esc(m.textoExtra||'Agora que a sua sessão está marcada, é só aguardar o horário e se dirigir à estação de massagem com 5 minutos de antecedência.')+'</textarea></div>'
+        +'</div><p class="muted" style="margin-top:8px">O envio automático entra quando ligarmos o serviço de e-mail. As configurações já ficam salvas e prontas.</p>'
+        +'<button class="btn" style="margin-top:12px" onclick="salvarEmails(\''+(empId||'')+'\',this)">Salvar e-mails</button><span id="em-ok"></span></div>';
+    }).catch(function(e){ admErro(corpo,e); });
+  });
+}
+function salvarEmails(empId, btn){
+  var email={remetente:$('em-remetente').value.trim(), assuntoMarcar:$('em-amarcar').value.trim(), assuntoCancelar:$('em-acancelar').value.trim(), textoExtra:$('em-texto').value.trim()};
+  if(btn)btn.disabled=true;
+  gcall('empresaConfigSet', ESTADO.token, empId||null, {email:email}).then(function(){ if(btn)btn.disabled=false; admOk('em-ok'); }).catch(function(e){ if(btn)btn.disabled=false; toast(erroMsg(e),'err'); });
 }
 
 /* ===================================================================
@@ -773,7 +993,7 @@ function falhaCarregar(alvo){return function(e){var m=erroMsg(e);if(m==='__NO_GA
 // Mapa: nome usado na interface -> [funcao RPC, parametros na ordem]
 var RPC = {
   bootColaborador:      ['app_boot_colaborador',       ['p_slug']],
-  cadastrarColaborador: ['app_cadastrar_colaborador',  ['p_slug','p_nome','p_email']],
+  cadastrarColaborador: ['app_cadastrar_colaborador',  ['p_slug','p_nome','p_email','p_celular']],
   getAgendaColaborador: ['app_get_agenda_colaborador', ['p_slug','p_email','p_ano','p_mes']],
   marcar:               ['app_marcar',                 ['p_slug','p_email','p_nome','p_data','p_hora']],
   cancelar:             ['app_cancelar',               ['p_slug','p_email','p_ag']],
@@ -794,7 +1014,10 @@ var RPC = {
   loginGestor:          ['app_login_gestor',           ['p_email','p_senha']],
   loginTerapeuta:       ['app_login_terapeuta',        ['p_email','p_senha']],
   terapeutaAgenda:      ['app_terapeuta_agenda',       ['p_token']],
-  relatorioAssiduidade: ['app_relatorio',              ['p_token','p_filtro']]
+  relatorioAssiduidade: ['app_relatorio',              ['p_token','p_filtro']],
+  empresaConfig:        ['app_empresa_config',         ['p_token','p_empresa']],
+  empresaConfigSet:     ['app_empresa_config_set',     ['p_token','p_empresa','p_patch']],
+  listarClientes:       ['app_listar_clientes',        ['p_token','p_empresa']]
 };
 
 var ERROS = {
